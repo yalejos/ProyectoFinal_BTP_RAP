@@ -1,0 +1,88 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName: 'Item',
+                     typeNamePlural: 'Items',
+                     title:{ type: #STANDARD,
+                             value: 'ItemID' }
+                     },
+       presentationVariant: [{ sortOrder: [{ by: 'ItemID',
+                                             direction: #ASC }],
+                               visualizations: [{ type: #AS_LINEITEM }]
+                            }]
+      }
+annotate entity ZSALESITEM_c_0573 with
+{
+  @UI.facet: [{ id: 'Item',
+              purpose:       #STANDARD,
+              type:          #IDENTIFICATION_REFERENCE,
+              label:         'Sale Item',
+              position:      10 }]
+
+  @UI: { lineItem: [{ type: #FOR_ACTION,
+                          dataAction: 'releaseProduct',
+                          label: 'Release Product',
+                          position: 10 },
+                        { type: #FOR_ACTION,
+                          dataAction: 'discontinueProduct',
+                          label: 'Discontinue Product',
+                          position: 20 }
+                    ] }
+  @UI.hidden: true
+  ItemUUID;
+
+  @UI.hidden: true
+  HeadUUID;
+  @UI: { lineItem: [{ position: 10,
+                     importance: #MEDIUM}],
+        identification: [{ position: 10 }]}
+  ItemID;
+  @UI: { lineItem: [{ position: 20,
+                     importance:#LOW}],
+        identification: [{ position: 20 }]}
+  Name;
+  @UI: { lineItem: [{ position: 30,
+                     importance:#LOW}],
+        identification: [{ position: 30 }]}
+  Description;
+  @UI: { lineItem: [{ position: 40,
+                     importance:#LOW}],
+        identification: [{ position: 40 }]}
+  ReleaseDate;
+  @UI: { lineItem: [{ position: 50,
+                     importance:#LOW}],
+        identification: [{ position: 50 }]}
+  DiscontinuedDate;
+  @UI: { lineItem: [{ position: 60,
+                   importance:#LOW}],
+      identification: [{ position: 60 }]}
+  Price;
+  @UI: { lineItem: [{ position: 70,
+                      importance:#LOW}],
+         identification: [{ position: 70 }]}
+  Height;
+  @UI: { lineItem: [{ position: 80,
+                      importance:#LOW}],
+         identification: [{ position: 80 }]}
+  Width;
+  @UI: { lineItem: [{ position: 90,
+                      importance:#LOW}],
+         identification: [{ position: 90 }]}
+  Depth;
+  @UI: { lineItem: [{ position: 100,
+                      importance:#LOW}],
+         identification: [{ position: 100 }]}
+  Quantity;
+  @UI: { lineItem: [{ position: 110,
+                      importance:#LOW}],
+         identification: [{ position: 110 }]}
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZUNITOFMEASURE_I_VH_0573',
+                                                 element: 'UnitId'},
+                                                 useForValidation: true }]
+         
+  UnitOfMeasure;
+  @UI.hidden: true
+  LocalLastChangedAt;
+  /* Associations */
+  @UI.hidden: true
+  _SalesHeader;
+
+}

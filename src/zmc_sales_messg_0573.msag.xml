@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+    <MASTERLANG>E</MASTERLANG>
+    <STEXT>Message class for Sales</STEXT>
+   </T100A>
+   <T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>The withdrawal date for &amp;1 must be after the release date</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Item &amp;1 has not been released yet</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>Item &amp;1 is discontinued and cannot be shipped</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>005</MSGNR>
+     <TEXT>Price for &amp;1 must be more than zero.</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>006</MSGNR>
+     <TEXT>Complete mandatoty fields</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>007</MSGNR>
+     <TEXT>&amp;1 cannot be withdrawn because it has not been released yet</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZMC_SALES_MESSG_0573</ARBGB>
+     <MSGNR>008</MSGNR>
+     <TEXT>Invalid date</TEXT>
+    </T100>
+   </T100>
+  </asx:values>
+ </asx:abap>
+</abapGit>

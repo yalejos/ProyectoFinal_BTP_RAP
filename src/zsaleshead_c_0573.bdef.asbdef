@@ -1,0 +1,38 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZSALESHEAD_c_0573 alias SalesHeader
+{
+  use create;
+  use update;
+  use delete;
+
+
+  use action confirmOrder;
+  use action shipOrder;
+  use function GetDefaultsForShipOrder;
+  use action cancelOrder;
+  use action validateFieldsMandatory;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use association _SalesItems { create; with draft; }
+}
+
+define behavior for ZSALESITEM_c_0573 alias SalesItem
+{
+
+  use update;
+  use delete;
+
+  use action releaseProduct;
+  use function GetDefaultsForReleaseProduct;
+  use action discontinueProduct;
+
+  use association _SalesHeader { with draft; }
+}

@@ -1,0 +1,130 @@
+managed implementation in class zbp_saleshead_r_0573 unique;
+strict ( 2 );
+with draft;
+
+define behavior for zsaleshead_r_0573 alias SalesHeader
+persistent table zsaleshead_0573
+draft table zsalesheadd_0573
+etag master LocalLastChangedAt
+lock master total etag LastChangedAt
+authorization master ( global, instance )
+{
+  create;
+  update ( features : instance );
+  delete ( features : instance );
+
+  field ( readonly, numbering : managed ) HeadUuid;
+  field ( readonly )
+  HeadID,
+  Createon,
+  Orderstatus,
+  Deliverydate,
+  LocalCreatedBy,
+  LocalCreatedAt,
+  LocalLastChangedBy,
+  LocalLastChangedAt,
+  LastChangedAt;
+
+  field ( mandatory ) Email;
+
+
+  // Vinculación con los ítems
+  association _SalesItems { create ( features : instance ); with draft; }
+
+
+  // Acciones Header
+  action ( features : instance ) confirmOrder result [1] $self;
+  action ( features : instance ) shipOrder    parameter zab_deliverydate_0573  result [1] $self
+  { default  function GetDefaultsForShipOrder;}
+  action ( features : instance ) cancelOrder    result [1] $self;
+
+
+  // Determinación inicial
+  determination initSalesOrder on modify { create; }
+
+   // Determinación para almacenar el logo
+  determination setCompanyLogo on modify { field CompanyCode; }
+
+  //Validations
+  validation validateMandatoryFields on save { update; create;  }
+
+  determine action validateFieldsMandatory { validation validateMandatoryFields; }
+
+  // -- DRAFT ACTIONS --
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare {
+    validation SalesItem~validatePrice;      // Validar precio en ítems
+    validation validateMandatoryFields;
+  }
+
+  // Mapeo manual para asegurar que el BDEF encuentre los campos en la tabla DB
+  mapping for zsaleshead_0573
+    {
+      HeadUuid           = head_uuid;
+      HeadID             = head_id;
+      Email              = email;
+      Firstname          = firstname;
+      Lastname           = lastname;
+      Country            = country;
+      Createon           = createon;
+      Deliverydate       = deliverydate;
+      Orderstatus        = orderstatus;
+      CompanyCode        = company_code;
+      ImageURL           = imageurl;
+      LocalCreatedBy     = local_created_by;
+      LocalCreatedAt     = local_created_at;
+      LocalLastChangedBy = local_last_changed_by;
+      LocalLastChangedAt = local_last_changed_at;
+      LastChangedAt      = last_changed_at;
+    }
+}
+
+define behavior for zsalesitem_r_0573 alias SalesItem
+persistent table zsalesitem_0573
+draft table zsalesitemd_0573
+lock dependent by _SalesHeader
+authorization dependent by _SalesHeader
+etag master LocalLastChangedAt
+{
+  update;
+  delete;
+  field ( readonly, numbering : managed )  ItemUUID;
+  field ( readonly ) HeadUUID, ItemID, ReleaseDate, DiscontinuedDate;
+
+
+
+  // Vinculación de vuelta al padre
+  association _SalesHeader { with draft; }
+
+   determination initSalesItem on modify { create; }
+
+  // Acciones de Ítems
+  action ( features : instance ) releaseProduct  parameter zab_releasedate_0573  result [1] $self
+  { default  function GetDefaultsForReleaseProduct;}
+  action ( features : instance ) discontinueProduct result [1] $self;
+
+  // Validaciones
+  validation validatePrice on save { create; update; }
+
+
+  mapping for zsalesitem_0573
+    {
+      ItemUUID           = item_uuid;
+      HeadUUID           = head_uuid;
+      ItemID             = item_id;
+      Name               = name;
+      Description        = description;
+      ReleaseDate        = release_date;
+      DiscontinuedDate   = discontinued_date;
+      Price              = price;
+      Height             = height;
+      Width              = width;
+      Depth              = depth;
+      Quantity           = quantity;
+      UnitOfMeasure      = unit_of_measure;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+}

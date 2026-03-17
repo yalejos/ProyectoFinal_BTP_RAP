@@ -1,0 +1,5 @@
+@EndUserText.label: 'Sales - Service definition'
+define service Zsd_sales_0573 {
+  expose ZSALESHEAD_c_0573 as SalesHeader;
+  expose ZSALESITEM_c_0573 as SalesItems;
+}

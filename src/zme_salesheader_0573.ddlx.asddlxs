@@ -1,0 +1,164 @@
+@Metadata.layer: #CORE
+
+@UI: { headerInfo: { typeName: '',
+                     typeNamePlural: 'Sales',
+                     title:{ type: #STANDARD,
+                             value: 'HeadID' },
+                    imageUrl: 'ImageURL'
+                     },
+       presentationVariant: [{ sortOrder: [{ by: 'HeadID',
+                                             direction: #ASC }],
+                               visualizations: [{ type: #AS_LINEITEM }]
+                            }]
+      }
+annotate entity ZSALESHEAD_c_0573 with
+{
+
+  @UI.facet: [{ id: 'Header',
+                 purpose:       #STANDARD,
+                 type: #IDENTIFICATION_REFERENCE,
+                 label:         'Sale',
+                 position:      10 },
+               { id:            'Item',
+                 purpose:       #STANDARD,
+                 type:          #LINEITEM_REFERENCE,
+                 label:         'Items',
+                 position:      20,
+                 targetElement: '_SalesItems'}]
+
+
+  @UI: { lineItem: [{ type: #FOR_ACTION,
+                      dataAction: 'confirmOrder',
+                      label: 'Confirm Order',
+                      position: 10 },
+                    { type: #FOR_ACTION,
+                      dataAction: 'shipOrder',
+                      label: 'Ship Order',
+                      position: 20 },
+                     { type: #FOR_ACTION,
+                      dataAction: 'cancelOrder',
+                      label: 'Cancel Order',
+                      position: 30 }
+                   ]}
+  @UI.hidden: true
+  HeadUuid;
+
+  @UI: { lineItem:[{ position: 10,
+                    importance: #HIGH }],
+         selectionField: [{ position: 10 }]}
+  @UI.identification: [{ position: 10 }]
+
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZSALESHEAD_I_VH_0573',
+                                                 element: 'SalesOrderID'},
+                                                 useForValidation: true }]
+
+
+  HeadID;
+
+  @UI: { lineItem: [{ position: 20,
+                      importance: #HIGH}],
+         identification: [{ position: 20 }] }
+
+  Email;
+  @UI: { lineItem:[{ position: 30,
+                    importance: #LOW }],
+     identification: [{ position: 30 }]}
+  Firstname;
+  @UI: { lineItem:[{ position: 40,
+                 importance: #LOW}],
+    identification: [{ position: 40 }]}
+  Lastname;
+  @UI: { lineItem:[{ position: 50,
+                importance: #LOW }],
+     selectionField: [{ position: 20 }],
+     identification: [{ position: 50 }],
+     textArrangement: #TEXT_ONLY
+    }
+ // @UI.textArrangement: #TEXT_ONLY
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZCOUNTRY_I_VH_0573',
+                                                 element: 'CountryId'},
+                                                 useForValidation: true }]
+  Country;
+
+
+  @UI.hidden: true
+  CountryName;
+
+  @UI: { lineItem:[{ position: 60,
+                     importance: #LOW }],
+          selectionField: [{ position: 60 }],
+          identification: [{ position: 60 }]
+
+    }
+  Createon;
+
+  @UI: { lineItem:[{ position: 70,
+                     importance: #LOW }],
+        //  selectionField: [{ position: 70 }],
+          identification: [{ position: 70 }]
+    }
+  Deliverydate;
+
+  @UI: { lineItem:[{ position: 80,
+                     importance: #LOW }],
+          selectionField: [{ position: 80 }],
+          identification: [{ position: 80 }],
+          textArrangement: #TEXT_ONLY
+    }
+  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZORDERSTATUS_I_VH_0573',
+                                              element: 'StatusID'},
+                                              useForValidation: true }]
+  //@UI.textArrangement: #TEXT_ONLY
+  Orderstatus;
+
+  @UI.hidden: true
+  OrderStatusName;
+
+  @UI.lineItem: [{ position: 90, importance: #HIGH, label: 'Company' }]
+  @UI.identification: [{ position: 90, label: 'Company' }]
+
+  @Consumption.valueHelpDefinition: [{
+     entity: { name: 'ZCOMP_LOGOS_I_VH_0573', element: 'CompanyCode' },
+     useForValidation: true
+  }]
+
+  CompanyCode;
+
+
+
+  @UI.textArrangement: #TEXT_FIRST
+  CompanyName;
+
+
+  @UI: { lineItem:[{ position: 05,
+                   importance: #LOW }]}
+
+  ImageURL;
+
+  //@UI.lineItem: [{ position: 1990, importance: #HIGH, label: 'Total Price' }]
+  //@UI.identification: [{ position: 190, label: 'Total Price' }]
+
+
+  //totalprice;
+
+
+  @UI.hidden: true
+  LocalCreatedBy;
+  @UI.hidden: true
+  LocalCreatedAt;
+  @UI.hidden: true
+  LocalLastChangedBy;
+  @UI.hidden: true
+  LocalLastChangedAt;
+  @UI.hidden: true
+  LastChangedAt;
+
+  /* Associations */
+  @UI.hidden: true
+  _Country;
+  @UI.hidden: true
+  _SalesItems;
+  @UI.hidden: true
+  _Logos;
+
+}
