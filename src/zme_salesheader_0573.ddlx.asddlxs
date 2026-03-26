@@ -115,9 +115,12 @@ annotate entity ZSALESHEAD_c_0573 with
   OrderStatusName;
 
   @UI: { lineItem:[{ position: 05,
-                   importance: #LOW ,
-                   label: 'Upload Logo'}]}
+                   importance: #LOW },
+                   { label: 'Logo' }],
+         identification: [{ position: 90 },
+                          { label: 'Upload Logo' }]}
 
+ 
   ImageURL;
   
   @UI.hidden: true
@@ -125,12 +128,9 @@ annotate entity ZSALESHEAD_c_0573 with
   
   @UI.hidden: true
   FileName;
-
+  
   @UI.lineItem: [{ position: 80, label: 'Total Amount', importance: #HIGH }]
-  
   @UI.identification: [{ position: 80, label: 'Total Amount' }]
-  
- 
   @UI.dataPoint: { title: 'Total Amount', visualization: #NUMBER }
 
 

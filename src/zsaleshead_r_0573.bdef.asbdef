@@ -28,6 +28,7 @@ authorization master ( global, instance )
 
   field ( mandatory ) Email;
 
+
   // Vinculación con los ítems
   association _SalesItems { create ( features : instance ); with draft; }
 

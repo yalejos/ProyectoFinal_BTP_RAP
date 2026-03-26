@@ -23,15 +23,18 @@ define root view entity zsaleshead_r_0573
       @ObjectModel.text.association: '_OrderStatus'
       orderstatus              as Orderstatus,
       _OrderStatus.Descripcion as OrderStatusName,
-      @Semantics.largeObject.mimeType: 'MimeType'    // Referencia al alias de abajo
-      @Semantics.largeObject.fileName: 'FileName'    // Referencia al alias de abajo
-      @Semantics.largeObject.contentDispositionPreference: #INLINE
+      @Semantics.largeObject: {
+      mimeType: 'MimeType',
+      fileName: 'FileName',
+      contentDispositionPreference: #INLINE
+      }
+      @Semantics.imageUrl: true
       imageurl                 as ImageURL,
       @Semantics.mimeType: true
       mimetype                 as MimeType,
       filename                 as FileName,
       total_amount             as totalAmount,
-      
+
 
       @Semantics.user.createdBy: true
       local_created_by         as LocalCreatedBy,
