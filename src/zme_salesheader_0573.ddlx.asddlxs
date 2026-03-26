@@ -114,32 +114,27 @@ annotate entity ZSALESHEAD_c_0573 with
   @UI.hidden: true
   OrderStatusName;
 
-  @UI.lineItem: [{ position: 90, importance: #HIGH, label: 'Company' }]
-  @UI.identification: [{ position: 90, label: 'Company' }]
-
-  @Consumption.valueHelpDefinition: [{
-     entity: { name: 'ZCOMP_LOGOS_I_VH_0573', element: 'CompanyCode' },
-     useForValidation: true
-  }]
-
-  CompanyCode;
-
-
-
-  @UI.textArrangement: #TEXT_FIRST
-  CompanyName;
-
-
   @UI: { lineItem:[{ position: 05,
-                   importance: #LOW }]}
+                   importance: #LOW ,
+                   label: 'Upload Logo'}]}
 
   ImageURL;
+  
+  @UI.hidden: true
+  MimeType;
+  
+  @UI.hidden: true
+  FileName;
 
-  //@UI.lineItem: [{ position: 1990, importance: #HIGH, label: 'Total Price' }]
-  //@UI.identification: [{ position: 190, label: 'Total Price' }]
+  @UI.lineItem: [{ position: 80, label: 'Total Amount', importance: #HIGH }]
+  
+  @UI.identification: [{ position: 80, label: 'Total Amount' }]
+  
+ 
+  @UI.dataPoint: { title: 'Total Amount', visualization: #NUMBER }
 
 
-  //totalprice;
+  totalAmount;
 
 
   @UI.hidden: true
@@ -159,6 +154,6 @@ annotate entity ZSALESHEAD_c_0573 with
   @UI.hidden: true
   _SalesItems;
   @UI.hidden: true
-  _Logos;
+  _logos;
 
 }

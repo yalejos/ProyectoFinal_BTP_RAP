@@ -18,6 +18,7 @@ authorization master ( global, instance )
   HeadID,
   Createon,
   Orderstatus,
+  totalAmount,
   Deliverydate,
   LocalCreatedBy,
   LocalCreatedAt,
@@ -26,7 +27,6 @@ authorization master ( global, instance )
   LastChangedAt;
 
   field ( mandatory ) Email;
-
 
   // Vinculación con los ítems
   association _SalesItems { create ( features : instance ); with draft; }
@@ -40,15 +40,14 @@ authorization master ( global, instance )
 
 
   // Determinación inicial
+  determination setSalesOrderID on save { create; }
   determination initSalesOrder on modify { create; }
 
-   // Determinación para almacenar el logo
-  determination setCompanyLogo on modify { field CompanyCode; }
 
   //Validations
-  validation validateMandatoryFields on save { update; create;  }
+  validation validateMandatoryFields on save { update; create; field Email;}
 
-  determine action validateFieldsMandatory { validation validateMandatoryFields; }
+  determine action validateFieldsMandatory { validation validateMandatoryFields;  }
 
   // -- DRAFT ACTIONS --
   draft action Edit;
@@ -57,9 +56,14 @@ authorization master ( global, instance )
   draft action Resume;
   draft determine action Prepare {
     validation SalesItem~validatePrice;      // Validar precio en ítems
-    validation validateMandatoryFields;
+    validation validateMandatoryFields ;
   }
 
+
+  side effects
+  {
+    determine action validateFieldsMandatory executed on field Email affects messages;
+  }
   // Mapeo manual para asegurar que el BDEF encuentre los campos en la tabla DB
   mapping for zsaleshead_0573
     {
@@ -72,8 +76,10 @@ authorization master ( global, instance )
       Createon           = createon;
       Deliverydate       = deliverydate;
       Orderstatus        = orderstatus;
-      CompanyCode        = company_code;
       ImageURL           = imageurl;
+      MimeType           = mimetype;
+      FileName           = filename;
+      totalAmount        = total_amount;
       LocalCreatedBy     = local_created_by;
       LocalCreatedAt     = local_created_at;
       LocalLastChangedBy = local_last_changed_by;
@@ -100,6 +106,9 @@ etag master LocalLastChangedAt
   association _SalesHeader { with draft; }
 
    determination initSalesItem on modify { create; }
+
+// Se dispara al crear, borrar o cambiar campos clave del ítem
+  determination updateHeaderTotal on modify { create; delete; field Price, Quantity; }
 
   // Acciones de Ítems
   action ( features : instance ) releaseProduct  parameter zab_releasedate_0573  result [1] $self

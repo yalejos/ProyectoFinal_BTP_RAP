@@ -24,11 +24,13 @@ define root view entity ZSALESHEAD_c_0573
           @ObjectModel.text.element: ['OrderStatusName']
           Orderstatus,
           OrderStatusName,
-          @ObjectModel.text.element: ['CompanyName']
-          CompanyCode,
-          CompanyName,
           @Semantics.imageUrl: true
           ImageURL,
+          MimeType,
+          FileName,
+          totalAmount,
+
+          
   //        @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZCL_VIRT_ELEM_SADL_0573'
  // virtual TotalPrice : zde_price_0573,
           LocalCreatedBy,
@@ -38,7 +40,6 @@ define root view entity ZSALESHEAD_c_0573
           LastChangedAt,
           /* Associations */
           _Country,
-          _Logos,
           _OrderStatus,
           _SalesItems : redirected to composition child ZSALESITEM_c_0573
 }

@@ -33,8 +33,10 @@ CLASS lhc_SalesHeader DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR SalesHeader~validateMandatoryFields.
     METHODS GetDefaultsForShipOrder FOR READ
       IMPORTING keys FOR FUNCTION SalesHeader~GetDefaultsForShipOrder RESULT result.
-    METHODS setCompanyLogo FOR DETERMINE ON MODIFY
-      IMPORTING keys FOR SalesHeader~setCompanyLogo.
+
+    METHODS setSalesOrderID FOR DETERMINE ON SAVE
+      IMPORTING keys FOR SalesHeader~setSalesOrderID.
+
 
 ENDCLASS.
 
@@ -246,42 +248,23 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
 
   METHOD initSalesOrder.
 
-
-   "Buscar el último ID numérico en la tabla de base de datos
-    SELECT MAX( head_id ) FROM zsaleshead_0573 INTO @DATA(lv_max_id).
-
-    " Extraer el número del formato SO-000000
-    DATA(lv_number) = substring( val = lv_max_id off = 3 ).
-    DATA(lv_next_number) = CONV i( lv_number ).
-
-
     READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
       ENTITY SalesHeader
-        FIELDS ( HeadID Orderstatus Createon Deliverydate ) WITH CORRESPONDING #( keys )
+        FIELDS ( Orderstatus Createon Deliverydate ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_orders).
 
     DELETE lt_orders WHERE HeadID IS NOT INITIAL.
 
     CHECK lt_orders IS NOT INITIAL.
 
-    DATA: lt_updates TYPE TABLE FOR UPDATE zsaleshead_r_0573.
-
-    LOOP AT lt_orders ASSIGNING FIELD-SYMBOL(<ls_order>).
-      lv_next_number += 1. " Incrementamos por cada orden nueva
-
-      APPEND VALUE #(
-          %tky         = <ls_order>-%tky
-          HeadID       = |SO-{ lv_next_number WIDTH = 6 ALIGN = RIGHT PAD = '0' }|
-          Orderstatus  = mc_status-open
-          Createon     = cl_abap_context_info=>get_system_date( )
-          Deliverydate = cl_abap_context_info=>get_system_date( ) + 7
-      ) TO lt_updates.
-    ENDLOOP.
 
     MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
       ENTITY SalesHeader
-        UPDATE FIELDS ( HeadID Orderstatus Createon Deliverydate )
-        WITH lt_updates.
+        UPDATE FIELDS ( Orderstatus Createon Deliverydate )
+        WITH VALUE #(  FOR ls_order IN lt_orders ( %tky = ls_order-%tky
+                           Orderstatus  = mc_status-open
+                           Createon     = cl_abap_context_info=>get_system_date( )
+                           Deliverydate = cl_abap_context_info=>get_system_date( ) + 7 )  ).
 
   ENDMETHOD.
 
@@ -302,10 +285,12 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
         APPEND VALUE #( %tky = <order>-%tky ) TO failed-salesheader.
         APPEND VALUE #( %tky = <order>-%tky
                           %state_area = 'VALIDATE_SALES'
+
                           %msg = NEW zcl_messages_sales_0573(
                                    textid   = zcl_messages_sales_0573=>mandatory_fields
                                    severity = if_abap_behv_message=>severity-error
                                   )
+                          %element-Email = if_abap_behv=>mk-on
                         ) TO reported-salesheader.
         RETURN.
       ENDIF.
@@ -327,34 +312,36 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD setCompanyLogo.
+
+
+  METHOD setSalesOrderID.
+
+    "Buscar el último ID numérico en la tabla de base de datos
+    SELECT MAX( head_id ) FROM zsaleshead_0573 INTO @DATA(lv_max_id).
+
+    " Extraer el número del formato SO-000000
+    DATA(lv_number) = substring( val = lv_max_id off = 3 ).
+    DATA(lv_next_number) = CONV i( lv_number ).
+
 
     READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
       ENTITY SalesHeader
-        FIELDS ( CompanyCode ) WITH CORRESPONDING #( keys )
+        FIELDS ( HeadID  ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_orders).
 
-    LOOP AT lt_orders ASSIGNING FIELD-SYMBOL(<ls_order>).
-      IF <ls_order>-CompanyCode IS NOT INITIAL.
+    DELETE lt_orders WHERE HeadID IS NOT INITIAL.
 
-        " 2. Buscar el logo en la tabla de configuración
-        SELECT SINGLE image_url
-          FROM zcomp_logo_0573
-          WHERE company_id = @<ls_order>-CompanyCode
-          INTO @DATA(lv_logo).
+    CHECK lt_orders IS NOT INITIAL.
 
-        IF sy-subrc = 0.
-          " 3. Actualizar el campo ImageURL de la orden automáticamente
-          MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
-            ENTITY SalesHeader
-              UPDATE FIELDS ( ImageURL )
-              WITH VALUE #( ( %tky     = <ls_order>-%tky
-                              ImageURL = lv_logo ) ).
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
 
+    MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+      ENTITY SalesHeader
+        UPDATE FIELDS ( HeadID  )
+        WITH VALUE #( FOR ls_order IN lt_orders INDEX INTO i ( %tky     = ls_order-%tky
+                          HeadID       = |SO-{ lv_next_number + i WIDTH = 6 ALIGN = RIGHT PAD = '0' }| ) ).
   ENDMETHOD.
+
+
 
 ENDCLASS.
 
@@ -383,6 +370,8 @@ CLASS lhc_SalesItem DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR FUNCTION SalesItem~GetDefaultsForReleaseProduct RESULT result.
     METHODS initSalesItem FOR DETERMINE ON MODIFY
       IMPORTING keys FOR SalesItem~initSalesItem.
+    METHODS updateHeaderTotal FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR SalesItem~updateHeaderTotal.
 
 ENDCLASS.
 
@@ -573,6 +562,41 @@ CLASS lhc_SalesItem IMPLEMENTATION.
           UPDATE FIELDS ( ItemID )
           WITH VALUE #( ( %tky   = <ls_item>-%tky
                           ItemID = |IT-{ lv_next_number * 10 WIDTH = 6 ALIGN = RIGHT PAD = '0' }| ) ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD updateHeaderTotal.
+
+
+    READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+        ENTITY SalesItem
+        FIELDS ( HeadUuid ) WITH CORRESPONDING #( keys )
+        RESULT DATA(lt_items).
+
+    DATA: lt_header_keys TYPE TABLE FOR READ IMPORT zsaleshead_r_0573.
+
+    lt_header_keys = CORRESPONDING #( lt_items MAPPING %tky = %tky EXCEPT * ).
+
+    SORT lt_header_keys BY %tky.
+    DELETE ADJACENT DUPLICATES FROM lt_header_keys COMPARING %tky.
+
+
+    "Para cada cabecera, sumar sus ítems y actualizar
+    LOOP AT lt_header_keys ASSIGNING FIELD-SYMBOL(<ls_header>).
+      SELECT SUM( price * quantity )
+        FROM zsalesitem_0573
+        WHERE head_uuid = @<ls_header>-%key-HeadUuid
+        INTO @DATA(lv_total).
+
+      IF sy-subrc <> 0.
+        lv_total = 0.
+      ENDIF.
+
+      MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+        ENTITY SalesHeader
+        UPDATE FIELDS ( TotalAmount )
+        WITH VALUE #( ( %tky = <ls_header>-%tky TotalAmount = lv_total ) ).
     ENDLOOP.
 
   ENDMETHOD.
