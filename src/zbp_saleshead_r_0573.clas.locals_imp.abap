@@ -5,7 +5,7 @@ CLASS lhc_SalesHeader DEFINITION INHERITING FROM cl_abap_behavior_handler.
                  open      TYPE zde_orderstatus_code_0573 VALUE 'O',
                  confirmed TYPE zde_orderstatus_code_0573 VALUE 'C',
                  shipped   TYPE zde_orderstatus_code_0573 VALUE 'S',
-                 canceled  TYPE zde_orderstatus_code_0573 VALUE 'X',
+                 cancelled TYPE zde_orderstatus_code_0573 VALUE 'X',
                END OF mc_status.
 
     METHODS get_instance_features FOR INSTANCE FEATURES
@@ -59,7 +59,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
         %action-cancelOrder  = COND #( WHEN ls_order-Orderstatus = mc_status-shipped
                                        THEN if_abap_behv=>fc-o-disabled ELSE if_abap_behv=>fc-o-enabled )
         " Control de creación de ítems: solo si no está enviada o cancelada
-        %assoc-_SalesItems   = COND #( WHEN ls_order-Orderstatus = mc_status-shipped OR ls_order-Orderstatus = mc_status-canceled
+        %assoc-_SalesItems   = COND #( WHEN ls_order-Orderstatus = mc_status-shipped OR ls_order-Orderstatus = mc_status-cancelled
                                        THEN if_abap_behv=>fc-o-disabled ELSE if_abap_behv=>fc-o-enabled )
         " Bloquear el botón 'Edit' si el estatus NO es 'Open'
         %update = COND #( WHEN ls_order-Orderstatus = mc_status-open
@@ -83,7 +83,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
     MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesHeader
           UPDATE FIELDS ( Orderstatus )
-          WITH VALUE #( FOR key IN keys ( %tky = key-%tky Orderstatus = mc_status-canceled ) ) " 'X' = Cancelled
+          WITH VALUE #( FOR key IN keys ( %tky = key-%tky Orderstatus = mc_status-cancelled ) ) " 'X' = Cancelled
         REPORTED DATA(lt_reported).
 
     reported = CORRESPONDING #( DEEP lt_reported ).
@@ -117,7 +117,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
       DATA(lv_failed_this_order) = abap_false.
 
       LOOP AT lt_items_indexed INTO DATA(ls_item) WHERE HeadUuid = <ls_key>-HeadUuid.
-      "No se puede confirmar, si existe un item sin fecha de lanzamiento
+        "No se puede confirmar, si existe un item sin fecha de lanzamiento
         IF ls_item-ReleaseDate IS INITIAL.
           lv_failed_this_order = abap_true.
 
@@ -352,7 +352,7 @@ CLASS lhc_SalesItem DEFINITION INHERITING FROM cl_abap_behavior_handler.
                  open      TYPE zde_orderstatus_code_0573 VALUE 'O',
                  confirmed TYPE zde_orderstatus_code_0573 VALUE 'C',
                  shipped   TYPE zde_orderstatus_code_0573 VALUE 'S',
-                 canceled  TYPE zde_orderstatus_code_0573 VALUE 'X',
+                 cancelled TYPE zde_orderstatus_code_0573 VALUE 'X',
                END OF mc_status.
 
     METHODS get_instance_features FOR INSTANCE FEATURES
@@ -411,7 +411,7 @@ CLASS lhc_SalesItem IMPLEMENTATION.
       DATA(lv_update_control) = if_abap_behv=>fc-o-disabled.
       DATA(lv_delete_control) = if_abap_behv=>fc-o-disabled.
 
-    " Si ls_parent no se encuentra (sy-subrc != 0), es un nuevo ítem en un nuevo objeto: PERMITIR.
+      " Si ls_parent no se encuentra (sy-subrc != 0), es un nuevo ítem en un nuevo objeto: PERMITIR.
       IF sy-subrc <> 0 OR <ls_parent>-Orderstatus = mc_status-open OR <ls_parent>-Orderstatus IS INITIAL.
         lv_update_control = if_abap_behv=>fc-o-enabled.
         lv_delete_control = if_abap_behv=>fc-o-enabled.
@@ -426,7 +426,7 @@ CLASS lhc_SalesItem IMPLEMENTATION.
       "Control de la Acción 'Release' (Solo si NO tiene fecha)
       DATA(lv_release_control) = if_abap_behv=>fc-o-disabled.
       IF <ls_item>-ReleaseDate IS INITIAL.
-         lv_release_control = if_abap_behv=>fc-o-enabled.
+        lv_release_control = if_abap_behv=>fc-o-enabled.
       ENDIF.
 
       APPEND VALUE #(
@@ -581,11 +581,11 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
     LOOP AT lt_items_with_parent ASSIGNING FIELD-SYMBOL(<ls_item>).
 
-        READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
-        ENTITY SalesHeader BY \_SalesItems
-          FIELDS ( ItemID  ) WITH VALUE #( ( %is_draft = <ls_item>-%is_draft
-                                            HeadUuid  = <ls_item>-HeadUUID ) )
-        RESULT DATA(lt_existing_items).
+      READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+      ENTITY SalesHeader BY \_SalesItems
+        FIELDS ( ItemID  ) WITH VALUE #( ( %is_draft = <ls_item>-%is_draft
+                                          HeadUuid  = <ls_item>-HeadUUID ) )
+      RESULT DATA(lt_existing_items).
 
       "Calcular el siguiente número
       DATA: lv_next_number TYPE i VALUE 1.
@@ -604,10 +604,13 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
       MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesItem
-          UPDATE FIELDS ( ItemID UnitOfMeasure )
+          UPDATE FIELDS ( ItemID UnitOfMeasure Price Height Width )
           WITH VALUE #( ( %tky   = <ls_item>-%tky
                           ItemID = |IT-{ lv_next_number  WIDTH = 6 ALIGN = RIGHT PAD = '0' }|
-                          UnitOfMeasure =  'ST' ) ).
+                          UnitOfMeasure =  'EA'
+                          Price = 1
+                          Width =  1
+                          Height = 1 ) ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -626,13 +629,15 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
       READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesHeader BY \_SalesItems
-        FIELDS ( Price Quantity )
+        FIELDS ( Price Quantity DiscontinuedDate )
         WITH VALUE #( ( %tky = <ls_header>-%tky ) )
         RESULT DATA(lt_items).
 
-
+      "Obtener solo los ítems válidos (con no descontinuados)
       LOOP AT lt_items ASSIGNING FIELD-SYMBOL(<ls_item>).
-        lv_total_header += ( <ls_item>-Price * <ls_item>-Quantity ).
+        IF <ls_item>-DiscontinuedDate IS INITIAL.
+          lv_total_header += ( <ls_item>-Price * <ls_item>-Quantity ).
+        ENDIF.
       ENDLOOP.
 
 

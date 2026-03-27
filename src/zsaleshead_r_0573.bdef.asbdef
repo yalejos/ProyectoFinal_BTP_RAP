@@ -65,6 +65,7 @@ authorization master ( global, instance )
   side effects
   {
     determine action validateFieldsMandatory executed on field Email affects messages;
+
   }
   // Mapeo manual para asegurar que el BDEF encuentre los campos en la tabla DB
   mapping for zsaleshead_0573
@@ -119,6 +120,12 @@ authorization master ( global, instance )
 
   // Validaciones
   validation validatePrice on save { create; update; }
+
+  side effects
+  {
+    field Price affects entity _SalesHeader;
+    field Quantity affects entity _SalesHeader;
+  }
 
 
   mapping for zsalesitem_0573
