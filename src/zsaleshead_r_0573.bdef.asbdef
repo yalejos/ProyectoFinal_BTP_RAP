@@ -90,17 +90,17 @@ authorization master ( global, instance )
     }
 }
 
-define behavior for zsalesitem_r_0573 alias SalesItem
-persistent table zsalesitem_0573
-draft table zsalesitemd_0573
-lock dependent by _SalesHeader
-authorization dependent by _SalesHeader
-etag master LocalLastChangedAt
-{
-  update ( features : instance );
-  delete ( features : instance );
-  field ( readonly, numbering : managed ) ItemUUID;
-  field ( readonly ) HeadUUID, ItemID, ReleaseDate, DiscontinuedDate;
+    define behavior for zsalesitem_r_0573 alias SalesItem
+    persistent table zsalesitem_0573
+    draft table zsalesitemd_0573
+    lock dependent by _SalesHeader
+    authorization dependent by _SalesHeader
+    etag master LocalLastChangedAt
+    {
+      update ( features : instance );
+      delete ( features : instance );
+      field ( readonly, numbering : managed ) ItemUUID;
+      field ( readonly ) HeadUUID, ItemID, ReleaseDate, DiscontinuedDate, UnitOfMeasure ;
 
 
 

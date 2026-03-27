@@ -411,29 +411,36 @@ CLASS lhc_SalesItem IMPLEMENTATION.
       DATA(lv_update_control) = if_abap_behv=>fc-o-disabled.
       DATA(lv_delete_control) = if_abap_behv=>fc-o-disabled.
 
-      " Si el padre existe y está Open, habilitamos edición
-      IF sy-subrc = 0 AND <ls_parent>-Orderstatus = mc_status-open.
+    " Si ls_parent no se encuentra (sy-subrc != 0), es un nuevo ítem en un nuevo objeto: PERMITIR.
+      IF sy-subrc <> 0 OR <ls_parent>-Orderstatus = mc_status-open OR <ls_parent>-Orderstatus IS INITIAL.
         lv_update_control = if_abap_behv=>fc-o-enabled.
         lv_delete_control = if_abap_behv=>fc-o-enabled.
       ENDIF.
 
-
+      "Control de la Acción 'Discontinue' (Solo si YA tiene fecha)
       DATA(lv_disc_control) = if_abap_behv=>fc-o-disabled.
       IF <ls_item>-ReleaseDate IS NOT INITIAL AND <ls_item>-DiscontinuedDate IS INITIAL.
         lv_disc_control = if_abap_behv=>fc-o-enabled.
       ENDIF.
 
+      "Control de la Acción 'Release' (Solo si NO tiene fecha)
+      DATA(lv_release_control) = if_abap_behv=>fc-o-disabled.
+      IF <ls_item>-ReleaseDate IS INITIAL.
+         lv_release_control = if_abap_behv=>fc-o-enabled.
+      ENDIF.
 
       APPEND VALUE #(
           %tky                       = <ls_item>-%tky
           %update                    = lv_update_control
           %delete                    = lv_delete_control
           %action-discontinueProduct = lv_disc_control
+          %action-releaseProduct     = lv_release_control
       ) TO result.
 
     ENDLOOP.
 
   ENDMETHOD.
+
   METHOD get_instance_authorizations.
   ENDMETHOD.
 
@@ -576,7 +583,7 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
         READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesHeader BY \_SalesItems
-          FIELDS ( ItemID ) WITH VALUE #( ( %is_draft = <ls_item>-%is_draft
+          FIELDS ( ItemID  ) WITH VALUE #( ( %is_draft = <ls_item>-%is_draft
                                             HeadUuid  = <ls_item>-HeadUUID ) )
         RESULT DATA(lt_existing_items).
 
@@ -597,13 +604,13 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
       MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesItem
-          UPDATE FIELDS ( ItemID )
+          UPDATE FIELDS ( ItemID UnitOfMeasure )
           WITH VALUE #( ( %tky   = <ls_item>-%tky
-                          ItemID = |IT-{ lv_next_number * 10 WIDTH = 6 ALIGN = RIGHT PAD = '0' }| ) ).
+                          ItemID = |IT-{ lv_next_number  WIDTH = 6 ALIGN = RIGHT PAD = '0' }|
+                          UnitOfMeasure =  'ST' ) ).
     ENDLOOP.
 
   ENDMETHOD.
-
   METHOD updateHeaderTotal.
 
 

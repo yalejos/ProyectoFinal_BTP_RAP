@@ -28,8 +28,7 @@ define root view entity zsaleshead_r_0573
       fileName: 'FileName',
       contentDispositionPreference: #INLINE
       }
-      @Semantics.imageUrl: true
-      imageurl                 as ImageURL,
+      imageurl                 as ImageURL, 
       @Semantics.mimeType: true
       mimetype                 as MimeType,
       filename                 as FileName,

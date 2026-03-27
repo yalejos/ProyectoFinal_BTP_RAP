@@ -33,7 +33,6 @@ CLASS zcl_generate_sales_data_0573 IMPLEMENTATION.
         DELETE FROM zsaleshead_0573.
         DELETE FROM zsalesitem_0573.
         DELETE FROM zcountry_0573.
-        DELETE FROM zunit_0573.
 
 
         GET TIME STAMP FIELD lv_timestamp.
@@ -96,13 +95,6 @@ CLASS zcl_generate_sales_data_0573 IMPLEMENTATION.
         INSERT zsaleshead_0573 FROM TABLE @lt_headers.
         INSERT zsalesitem_0573 FROM TABLE @lt_items.
 
-        " Llenar tablas maestras (Countries & Units)
-        INSERT zunit_0573 FROM TABLE @( VALUE #(
-            ( client = sy-mandt unit_id = 'ST' unit_text = 'Pieza' )
-            ( client = sy-mandt unit_id = 'KG' unit_text = 'Kilogramo' )
-            ( client = sy-mandt unit_id = 'M' unit_text = 'Metro' )
-            ( client = sy-mandt unit_id = 'UN' unit_text = 'Unidad' )
-        ) ).
 
         "Countries
         INSERT zcountry_0573 FROM TABLE @( VALUE #(

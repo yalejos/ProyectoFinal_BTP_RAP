@@ -71,13 +71,8 @@ annotate entity ZSALESITEM_c_0573 with
                       importance:#LOW}],
          identification: [{ position: 100 }]}
   Quantity;
-  @UI: { lineItem: [{ position: 110,
-                      importance:#LOW}],
-         identification: [{ position: 110 }]}
-  @Consumption.valueHelpDefinition: [{ entity: { name: 'ZUNITOFMEASURE_I_VH_0573',
-                                                 element: 'UnitId'},
-                                                 useForValidation: true }]
-         
+  @UI.hidden: true
+  
   UnitOfMeasure;
   @UI.hidden: true
   LocalLastChangedAt;

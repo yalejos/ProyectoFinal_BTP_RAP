@@ -25,19 +25,23 @@ define root view entity ZSALESHEAD_c_0573
           Orderstatus,
           OrderStatusName,
           @Semantics.largeObject: {
-          mimeType: 'MimeType',       
-          fileName: 'FileName',      
+          mimeType: 'MimeType',
+          fileName: 'FileName',
           contentDispositionPreference: #INLINE
           }
-          @Semantics.imageUrl: true
           ImageURL,
+          @Semantics.largeObject: {
+          mimeType: 'MimeType',
+          fileName: 'FileName',
+          contentDispositionPreference: #INLINE
+          }
+          @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZCL_SALES_LOGO_CALC'
+          @Semantics.imageUrl: true
+  virtual ImageRenderUrl : abap.rawstring(0),
           MimeType,
           FileName,
           totalAmount,
 
-
-          //        @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZCL_VIRT_ELEM_SADL_0573'
-          // virtual TotalPrice : zde_price_0573,
           LocalCreatedBy,
           LocalCreatedAt,
           LocalLastChangedBy,

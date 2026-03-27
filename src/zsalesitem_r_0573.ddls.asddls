@@ -19,7 +19,7 @@ define view entity zsalesitem_r_0573
       @Semantics.quantity.unitOfMeasure : 'UnitOfMeasure'
       width                 as Width,
       depth                 as Depth,
-      quantity              as Quantity,
+      quantity              as Quantity, 
       unit_of_measure       as UnitOfMeasure,
 
       //Local ETAG
