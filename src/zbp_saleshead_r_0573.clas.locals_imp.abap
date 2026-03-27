@@ -101,7 +101,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
                 WITH NON-UNIQUE KEY HeadUuid.
 
     DATA: lt_items_indexed TYPE tt_items_indexed,
-          lt_to_modify     TYPE TABLE FOR UPDATE zsaleshead_r_0573. " Para acumular cambios
+          lt_to_modify     TYPE TABLE FOR UPDATE zsaleshead_r_0573.
 
     READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
       ENTITY SalesHeader BY \_SalesItems
@@ -117,6 +117,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
       DATA(lv_failed_this_order) = abap_false.
 
       LOOP AT lt_items_indexed INTO DATA(ls_item) WHERE HeadUuid = <ls_key>-HeadUuid.
+      "No se puede confirmar, si existe un item sin fecha de lanzamiento
         IF ls_item-ReleaseDate IS INITIAL.
           lv_failed_this_order = abap_true.
 
@@ -128,11 +129,11 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
                                    name     = ls_item-Name
                                    severity = if_abap_behv_message=>severity-error )
                         ) TO reported-salesheader.
-          EXIT. " Salir del loop de ítems, esta orden ya falló
+          EXIT.
         ENDIF.
       ENDLOOP.
 
-      " Si no falló, la agregamos a la lista para modificar
+      " Si no falló
       IF lv_failed_this_order = abap_false.
         APPEND VALUE #( %tky        = <ls_key>-%tky
                         Orderstatus = mc_status-confirmed ) TO lt_to_modify.
@@ -176,7 +177,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
     lt_items_indexed = CORRESPONDING #( lt_items ).
     DATA(lv_today) = cl_abap_context_info=>get_system_date( ).
 
-    " Procesar cada orden (cabecera)
+
     LOOP AT keys ASSIGNING FIELD-SYMBOL(<ls_key>).
       DATA(lv_failed_order) = abap_false.
 
@@ -186,7 +187,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
         lv_delivery_date = lv_today.
       ENDIF.
 
-      " Validar ítems de esta orden específica
+
       LOOP AT lt_items_indexed INTO DATA(ls_item) WHERE HeadUuid = <ls_key>-HeadUuid.
 
         "¿El producto tiene fecha de lanzamiento?
@@ -218,7 +219,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
 
-      "Si pasó los checks, acumulamos para el update masivo
+      "Si pasó los checks
       IF lv_failed_order = abap_false.
         APPEND VALUE #( %tky         = <ls_key>-%tky
                         Orderstatus  = mc_status-shipped
@@ -226,7 +227,7 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    " Ejecutar cambios en la DB
+
     IF lt_to_ship IS NOT INITIAL.
       MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesHeader
@@ -277,8 +278,8 @@ CLASS lhc_SalesHeader IMPLEMENTATION.
 
 
     LOOP AT lt_orders ASSIGNING FIELD-SYMBOL(<order>).
-      APPEND VALUE #( %tky = <order>-%tky
-            %state_area = 'VALIDATE_SALES' ) TO reported-salesheader.
+*      APPEND VALUE #( %tky = <order>-%tky
+*            %state_area = 'VALIDATE_SALES' ) TO reported-salesheader.
 
       "Mandatory Email
       IF <order>-Email IS INITIAL.
@@ -347,6 +348,12 @@ ENDCLASS.
 
 CLASS lhc_SalesItem DEFINITION INHERITING FROM cl_abap_behavior_handler.
   PRIVATE SECTION.
+    CONSTANTS: BEGIN OF mc_status,
+                 open      TYPE zde_orderstatus_code_0573 VALUE 'O',
+                 confirmed TYPE zde_orderstatus_code_0573 VALUE 'C',
+                 shipped   TYPE zde_orderstatus_code_0573 VALUE 'S',
+                 canceled  TYPE zde_orderstatus_code_0573 VALUE 'X',
+               END OF mc_status.
 
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR SalesItem RESULT result.
@@ -379,20 +386,54 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
   METHOD get_instance_features.
 
+
     READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesItem
-          FIELDS ( ReleaseDate DiscontinuedDate ) WITH CORRESPONDING #( keys )
+          FIELDS ( ReleaseDate DiscontinuedDate HeadUUID )
+          WITH CORRESPONDING #( keys )
         RESULT DATA(lt_items).
 
-    result = VALUE #( FOR ls_item IN lt_items (
-        %tky = ls_item-%tky
-        " Solo permitir Descatalogar si YA fue lanzado y NO ha sido retirado aún
-        %action-discontinueProduct = COND #( WHEN ls_item-ReleaseDate IS NOT INITIAL AND ls_item-DiscontinuedDate IS INITIAL
-                                             THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled )
-    ) ).
+
+    READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+        ENTITY SalesHeader
+          FIELDS ( Orderstatus )
+          WITH VALUE #( FOR ls_item IN lt_items ( %tky = CORRESPONDING #( ls_item-%tky ) ) )
+        RESULT DATA(lt_parent_headers).
+
+
+    LOOP AT lt_items ASSIGNING FIELD-SYMBOL(<ls_item>).
+
+
+      READ TABLE lt_parent_headers WITH KEY entity
+        COMPONENTS HeadUuid = <ls_item>-HeadUUID
+        ASSIGNING FIELD-SYMBOL(<ls_parent>).
+
+      DATA(lv_update_control) = if_abap_behv=>fc-o-disabled.
+      DATA(lv_delete_control) = if_abap_behv=>fc-o-disabled.
+
+      " Si el padre existe y está Open, habilitamos edición
+      IF sy-subrc = 0 AND <ls_parent>-Orderstatus = mc_status-open.
+        lv_update_control = if_abap_behv=>fc-o-enabled.
+        lv_delete_control = if_abap_behv=>fc-o-enabled.
+      ENDIF.
+
+
+      DATA(lv_disc_control) = if_abap_behv=>fc-o-disabled.
+      IF <ls_item>-ReleaseDate IS NOT INITIAL AND <ls_item>-DiscontinuedDate IS INITIAL.
+        lv_disc_control = if_abap_behv=>fc-o-enabled.
+      ENDIF.
+
+
+      APPEND VALUE #(
+          %tky                       = <ls_item>-%tky
+          %update                    = lv_update_control
+          %delete                    = lv_delete_control
+          %action-discontinueProduct = lv_disc_control
+      ) TO result.
+
+    ENDLOOP.
 
   ENDMETHOD.
-
   METHOD get_instance_authorizations.
   ENDMETHOD.
 
@@ -525,24 +566,21 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
   METHOD initSalesItem.
 
-    " 1. Leer los campos necesarios de los ítems que se están guardando
     READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
       ENTITY SalesItem
         FIELDS ( HeadUUID ) WITH CORRESPONDING #( keys )
       RESULT DATA(lt_items_with_parent).
 
-    " 2. Procesar cada ítem
+
     LOOP AT lt_items_with_parent ASSIGNING FIELD-SYMBOL(<ls_item>).
 
-      " Leer todos los ítems que ya existen para este padre específico (HeadUUID)
-      " Usamos la lectura filtrando por el UUID del padre
-      READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+        READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesHeader BY \_SalesItems
           FIELDS ( ItemID ) WITH VALUE #( ( %is_draft = <ls_item>-%is_draft
                                             HeadUuid  = <ls_item>-HeadUUID ) )
         RESULT DATA(lt_existing_items).
 
-      " 3. Calcular el siguiente número
+      "Calcular el siguiente número
       DATA: lv_next_number TYPE i VALUE 1.
 
       IF lt_existing_items IS NOT INITIAL.
@@ -556,7 +594,7 @@ CLASS lhc_SalesItem IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      " 4. Actualizar el ítem actual con el nuevo formato
+
       MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesItem
           UPDATE FIELDS ( ItemID )
@@ -570,33 +608,32 @@ CLASS lhc_SalesItem IMPLEMENTATION.
 
 
     READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
-        ENTITY SalesItem
-        FIELDS ( HeadUuid ) WITH CORRESPONDING #( keys )
+      ENTITY SalesItem
+      BY \_SalesHeader
+      ALL FIELDS WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_headers).
+
+    LOOP AT lt_headers ASSIGNING FIELD-SYMBOL(<ls_header>).
+      DATA(lv_total_header) = 0.
+
+
+      READ ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
+        ENTITY SalesHeader BY \_SalesItems
+        FIELDS ( Price Quantity )
+        WITH VALUE #( ( %tky = <ls_header>-%tky ) )
         RESULT DATA(lt_items).
 
-    DATA: lt_header_keys TYPE TABLE FOR READ IMPORT zsaleshead_r_0573.
 
-    lt_header_keys = CORRESPONDING #( lt_items MAPPING %tky = %tky EXCEPT * ).
+      LOOP AT lt_items ASSIGNING FIELD-SYMBOL(<ls_item>).
+        lv_total_header += ( <ls_item>-Price * <ls_item>-Quantity ).
+      ENDLOOP.
 
-    SORT lt_header_keys BY %tky.
-    DELETE ADJACENT DUPLICATES FROM lt_header_keys COMPARING %tky.
-
-
-    "Para cada cabecera, sumar sus ítems y actualizar
-    LOOP AT lt_header_keys ASSIGNING FIELD-SYMBOL(<ls_header>).
-      SELECT SUM( price * quantity )
-        FROM zsalesitem_0573
-        WHERE head_uuid = @<ls_header>-%key-HeadUuid
-        INTO @DATA(lv_total).
-
-      IF sy-subrc <> 0.
-        lv_total = 0.
-      ENDIF.
 
       MODIFY ENTITIES OF zsaleshead_r_0573 IN LOCAL MODE
         ENTITY SalesHeader
         UPDATE FIELDS ( TotalAmount )
-        WITH VALUE #( ( %tky = <ls_header>-%tky TotalAmount = lv_total ) ).
+        WITH VALUE #( ( %tky        = <ls_header>-%tky
+                        TotalAmount = lv_total_header ) ).
     ENDLOOP.
 
   ENDMETHOD.

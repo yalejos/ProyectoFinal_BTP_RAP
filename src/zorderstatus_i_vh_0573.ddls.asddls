@@ -4,7 +4,7 @@
 @ObjectModel.resultSet.sizeCategory: #XS
 @Search.searchable: true
 define view entity ZORDERSTATUS_I_VH_0573
-  as select from DDCDS_CUSTOMER_DOMAIN_VALUE_T (p_domain_name: 'ZDO_ORDERSTATUS_CODE_0573')
+  as select from DDCDS_CUSTOMER_DOMAIN_VALUE_T (p_domain_name: 'ZDO_ORDERSTATUS_0573')
 {
       @UI.hidden: true
   key domain_name    as DomainName,
@@ -21,5 +21,5 @@ define view entity ZORDERSTATUS_I_VH_0573
       text           as Descripcion
 }
 where
-      domain_name = 'ZDO_ORDERSTATUS_CODE_0573'
+      domain_name = 'ZDO_ORDERSTATUS_0573'
   and language    = $session.system_language

@@ -36,8 +36,8 @@ CLASS zcl_messages_sales_0573 DEFINITION
       BEGIN OF user_unauthorized,
         msgid TYPE symsgid VALUE gc_msgid,
         msgno TYPE symsgno VALUE '003',
-        attr1 TYPE scx_attrname VALUE 'MV_NONAUT',
-        attr2 TYPE scx_attrname VALUE 'MV_INCIDENTID',
+        attr1 TYPE scx_attrname VALUE '',
+        attr2 TYPE scx_attrname VALUE '',
         attr3 TYPE scx_attrname VALUE '',
         attr4 TYPE scx_attrname VALUE '',
       END OF user_unauthorized,
@@ -91,9 +91,7 @@ CLASS zcl_messages_sales_0573 DEFINITION
           mv_msgv2      TYPE msgv1,
           mv_msgv3      TYPE msgv1,
           mv_msgv4      TYPE msgv1,
-          mv_name       TYPE zde_name_0573,
-          mv_nonaut     TYPE zde_responsible_yas,
-          mv_incidentid TYPE zde_incident_id_yas.
+          mv_name       TYPE zde_name_0573.
 
     METHODS constructor
       IMPORTING

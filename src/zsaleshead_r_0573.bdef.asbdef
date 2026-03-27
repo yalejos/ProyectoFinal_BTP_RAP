@@ -35,9 +35,9 @@ authorization master ( global, instance )
 
   // Acciones Header
   action ( features : instance ) confirmOrder result [1] $self;
-  action ( features : instance ) shipOrder    parameter zab_deliverydate_0573  result [1] $self
-  { default  function GetDefaultsForShipOrder;}
-  action ( features : instance ) cancelOrder    result [1] $self;
+  action ( features : instance ) shipOrder parameter zab_deliverydate_0573 result [1] $self
+  { default function GetDefaultsForShipOrder; }
+  action ( features : instance ) cancelOrder result [1] $self;
 
 
   // Determinación inicial
@@ -46,18 +46,19 @@ authorization master ( global, instance )
 
 
   //Validations
-  validation validateMandatoryFields on save { update; create; field Email;}
+  validation validateMandatoryFields on save { update; create; field Email; }
 
-  determine action validateFieldsMandatory { validation validateMandatoryFields;  }
+  determine action validateFieldsMandatory { validation validateMandatoryFields; }
 
   // -- DRAFT ACTIONS --
   draft action Edit;
   draft action Activate optimized;
   draft action Discard;
   draft action Resume;
-  draft determine action Prepare {
+  draft determine action Prepare
+  {
     validation SalesItem~validatePrice;      // Validar precio en ítems
-    validation validateMandatoryFields ;
+    validation validateMandatoryFields;
   }
 
 
@@ -96,9 +97,9 @@ lock dependent by _SalesHeader
 authorization dependent by _SalesHeader
 etag master LocalLastChangedAt
 {
-  update;
-  delete;
-  field ( readonly, numbering : managed )  ItemUUID;
+  update ( features : instance );
+  delete ( features : instance );
+  field ( readonly, numbering : managed ) ItemUUID;
   field ( readonly ) HeadUUID, ItemID, ReleaseDate, DiscontinuedDate;
 
 
@@ -106,14 +107,14 @@ etag master LocalLastChangedAt
   // Vinculación de vuelta al padre
   association _SalesHeader { with draft; }
 
-   determination initSalesItem on modify { create; }
+  determination initSalesItem on modify { create; }
 
-// Se dispara al crear, borrar o cambiar campos clave del ítem
-  determination updateHeaderTotal on modify { create; delete; field Price, Quantity; }
+  // Se dispara al crear, borrar o cambiar campos clave del ítem
+  determination updateHeaderTotal on modify { create; update; delete; field Price, Quantity; }
 
   // Acciones de Ítems
-  action ( features : instance ) releaseProduct  parameter zab_releasedate_0573  result [1] $self
-  { default  function GetDefaultsForReleaseProduct;}
+  action ( features : instance ) releaseProduct parameter zab_releasedate_0573 result [1] $self
+  { default function GetDefaultsForReleaseProduct; }
   action ( features : instance ) discontinueProduct result [1] $self;
 
   // Validaciones

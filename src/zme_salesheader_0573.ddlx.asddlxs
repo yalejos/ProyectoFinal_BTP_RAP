@@ -40,6 +40,21 @@ annotate entity ZSALESHEAD_c_0573 with
                       label: 'Cancel Order',
                       position: 30 }
                    ]}
+                   
+   @UI: { identification:  [{ type: #FOR_ACTION,
+                              dataAction: 'confirmOrder',
+                              label: 'Confirm Order',
+                              position: 10 },
+                            { type: #FOR_ACTION,
+                              dataAction: 'shipOrder',
+                              label: 'Ship Order',
+                              position: 20 },
+                             { type: #FOR_ACTION,
+                              dataAction: 'cancelOrder',
+                              label: 'Cancel Order',
+                              position: 30 }
+                           ]}
+                   
   @UI.hidden: true
   HeadUuid;
 
